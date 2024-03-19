@@ -3,6 +3,7 @@ package com.tac.guns.client.input;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.tac.guns.api.client.player.IClientPlayerGunOperator;
 import com.tac.guns.api.item.IGun;
+import com.tac.guns.config.client.KeyConfig;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -19,6 +20,8 @@ import static com.tac.guns.util.InputExtraCheck.isInGame;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class AimKey {
+    private static boolean isPressed = false;
+
     public static final KeyMapping AIM_KEY = new KeyMapping("key.tac.aim.desc",
             KeyConflictContext.IN_GAME,
             KeyModifier.NONE,
@@ -34,11 +37,22 @@ public class AimKey {
                 return;
             }
             if (IGun.mainhandHoldGun(player)) {
-                if (event.getAction() == GLFW.GLFW_PRESS) {
-                    IClientPlayerGunOperator.fromLocalPlayer(player).aim(true);
-                }
-                if (event.getAction() == GLFW.GLFW_RELEASE) {
-                    IClientPlayerGunOperator.fromLocalPlayer(player).aim(false);
+                if (KeyConfig.HOLD_TO_AIM.get()) {
+                    if (event.getAction() == GLFW.GLFW_PRESS) {
+                        IClientPlayerGunOperator.fromLocalPlayer(player).aim(true);
+                    }
+                    if (event.getAction() == GLFW.GLFW_RELEASE) {
+                        IClientPlayerGunOperator.fromLocalPlayer(player).aim(false);
+                    }
+                } else {
+                    boolean currentlyAiming = IClientPlayerGunOperator.fromLocalPlayer(player).isAim();
+                    if (event.getAction() == GLFW.GLFW_PRESS && !isPressed) {
+                        IClientPlayerGunOperator.fromLocalPlayer(player).aim(!currentlyAiming);
+                        isPressed = true;
+                    }
+                    if (event.getAction() == GLFW.GLFW_RELEASE) {
+                        isPressed = false;
+                    }
                 }
             }
         }
